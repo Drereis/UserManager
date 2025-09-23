@@ -9,15 +9,9 @@ require_once 'Validator.php';
 class UserManager
 {
     private array $users = [];
-    private int $nextId = 1;    
-
     public function __construct(array $initialUsers = [])
     {
         $this->users = $this->convertArrayToUsers($initialUsers);
-        if (!empty($this->users)) {
-            $lastUser = end($this->users);
-            $this->nextId = $lastUser->getId() + 1;
-        }
     }
 
     private function convertArrayToUsers(array $userArrays): array
@@ -34,7 +28,7 @@ class UserManager
         return $userObjects;
     }
 
-    private function findUserById( int $id): ?User
+    public function findUserById( int $id): ?User
     {
         foreach ($this->users as $user) {
             if ($user->getId() === $id) {
@@ -54,6 +48,16 @@ class UserManager
         return null;
     }
 
+    private function hashedPassword(string $password): string
+    {
+        return password_hash($password, PASSWORD_DEFAULT);
+    }
+
+    private function generateNextId(): int
+    {
+        return count($this->users) + 1;
+    }
+
     public function registerUser(string $name, string $email, string $password): array 
     {
         if (!Validator::isValidEmail($email)) {
@@ -69,34 +73,50 @@ class UserManager
         }
 
 
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $hashedPassword = $this->hashedPassword($password);
+
+        $newUserId = $this->generateNextId();
 
         
         $newUser = new User(
-            $this->nextId,
+            $newUserId,
             $name,
             $email,
             $hashedPassword
         );
 
-
         $this->users[] = $newUser;
-        $this->nextId++;
-
-
+    
         return ['success' => true, 'message' => 'Usuário cadastrado com sucesso', 'user' => $newUser];
-
-
     }
 
     public function loginUser(string $email, string $password): array 
     {
-        return[];
+        $user = $this->findUserByEmail($email);
+        if ($user === null || !$user->verifyPassword($password)) {
+            return ['success' => false, 'message' => 'Credenciais inválidas.'];
+        }
+        return['success' => true, 'message' => 'Login realizado com sucesso.'];
     }
 
     public function resetPassword(int $userId, string $newPassword): array
     {
-        return [];
+        $user = $this->findUserById($userId);
+        if ($user === null) {
+            return ['success' => false, 'message' => 'Credenciais inválidas.'];
+        }
+
+        if (!Validator::isStrongPassword($newPassword)) {
+            return ['success' => false, 'message' => 'Nova senha fraca.'];
+        }
+
+        $newHashedPassword = $this->hashedPassword($newPassword);
+         
+        $user->setHashedPassword($newHashedPassword);
+
+        return ['success' => true, 'message' => 'Senha redefinida com sucesso.'];
+
+
     }
 
     public function getUsers(): array 

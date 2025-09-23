@@ -42,6 +42,11 @@ class User
     {
         return password_verify($password, $this->hashedPassword);
     }
+
+    public function setHashedPassword(string $newHashedPassword): void 
+    {
+        $this->hashedPassword = $newHashedPassword;
+    }
     
 }
 
