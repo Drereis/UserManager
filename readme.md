@@ -67,3 +67,6 @@ http://localhost/usuarios/src/index.php
 
 ##  Licença
 Este projeto é apenas para fins educacionais. Livre para uso e modificação.
+
+Ra: 1987363->André Luis da Silva Reis.
+Ra: 1993917->Joaquim Fernando Sant'ana Moreira.
